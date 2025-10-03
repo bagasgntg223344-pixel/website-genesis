@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GENESIS — Jurnalistik SMAN 1 Kertosono</title>
+  <meta name="description" content="Portal GENESIS - Jurnalistik SMAN 1 Kertosono. Berita, galeri, agenda, dan kontak."/>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <div class="logo">G</div>
+        <div>
+          <h1>GENESIS</h1>
+          <p class="subtitle">JURNALISTIK SMAN 1 KERTOSONO</p>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="#home" class="nav-link" data-target="home">Beranda</a>
+        <a href="#berita" class="nav-link" data-target="berita">Berita</a>
+        <a href="#galeri" class="nav-link" data-target="galeri">Galeri</a>
+        <a href="#agenda" class="nav-link" data-target="agenda">Agenda</a>
+        <a href="#profil" class="nav-link" data-target="profil">Profil</a>
+        <a href="#kontak" class="nav-link" data-target="kontak">Kontak</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- HERO -->
+    <section id="home" class="hero card">
+      <div>
+        <h2 id="hero-title">Selamat Datang — GENESIS</h2>
+        <p id="hero-sub">Portal Jurnalistik SMAN 1 Kertosono — berita, dokumentasi, dan kegiatan sekolah.</p>
+      </div>
+    </section>
+
+    <!-- BERITA -->
+    <section id="berita" class="card">
+      <div class="section-header">
+        <h3>Berita Terbaru</h3>
+        <input id="searchNews" type="search" placeholder="Cari berita..." aria-label="Cari berita">
+      </div>
+      <div id="newsList" class="grid posts" aria-live="polite">
+        <!-- Berita dimuat oleh JS -->
+      </div>
+      <div id="newsFallback" class="small muted">Memuat berita...</div>
+    </section>
+
+    <!-- GALERI -->
+    <section id="galeri" class="card">
+      <h3>Galeri Foto</h3>
+      <div id="galleryGrid" class="grid gallery" aria-live="polite">
+        <!-- Gambar dimuat oleh JS -->
+      </div>
+    </section>
+
+    <!-- AGENDA -->
+    <section id="agenda" class="card">
+      <h3>Agenda Mendatang</h3>
+      <ul id="agendaList" class="agenda-list"></ul>
+      <div id="agendaFallback" class="small muted">Memuat agenda...</div>
+    </section>
+
+    <!-- PROFIL -->
+    <section id="profil" class="card">
+      <h3>Profil GENESIS</h3>
+      <p>GENESIS adalah komunitas jurnalistik di SMAN 1 Kertosono. Kami menulis berita, melakukan liputan acara, dan mempublikasikan karya siswa.</p>
+    </section>
+
+    <!-- KONTAK -->
+    <section id="kontak" class="card">
+      <h3>Kontak</h3>
+      <p class="muted small">Untuk kirim info atau penugasan liputan, hubungi: <strong>genesis@sman1kertosono.sch.id</strong> atau lewat form di bawah (form statis - perlu backend agar benar-benar mengirim).</p>
+      <form id="contactForm" class="contact-form">
+        <input name="name" placeholder="Nama" required>
+        <input name="email" type="email" placeholder="Email" required>
+        <textarea name="message" rows="4" placeholder="Pesan / Informasi"></textarea>
+        <button type="submit" class="btn">Kirim (Demo)</button>
+      </form>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© <span id="year"></span> GENESIS — Jurnalistik SMAN 1 Kertosono</p>
+      <p class="small muted">Data berita/agenda/galeri diambil dari file <code>/data/*.json</code> — edit file tersebut untuk update konten.</p>
+    </div>
+  </footer>
+
+  <script>
+  /* ===========================
+     Static site loader (no CMS)
+     - Semua konten dinamis di-load dari file JSON di /data/
+     - Untuk update: edit file JSON & upload kembali ke server
+     ============================ */
+
+  const el = id => document.getElementById(id);
+  const NEWS_JSON = 'data/news.json';
+  const AGENDA_JSON = 'data/agenda.json';
+  const GALLERY_JSON = 'data/gallery.json';
+
+  // helper untuk fetch dengan fallback (jika fetch gagal, tampil pesan)
+  async function fetchJson(path, fallbackCallback){
+    try {
+      const r = await fetch(path, {cache: 'no-cache'});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return await r.json();
+    } catch (err) {
+      console.warn('Fetch error', path, err);
+      if (typeof fallbackCallback === 'function') fallbackCallback(err);
+      return null;
+    }
+  }
+
+  // Render berita
+  async function loadNews(){
+    const data = await fetchJson(NEWS_JSON, ()=> el('newsFallback').textContent = 'Tidak dapat memuat news.json. Pastikan file tersedia di /data/news.json');
+    const wrap = el('newsList');
+    if(!data || !Array.isArray(data.items) || data.items.length === 0){
+      wrap.innerHTML = '<p class="muted small">Belum ada berita publik. Edit <code>/data/news.json</code> untuk menambah.</p>';
+      return;
+    }
+    el('newsFallback').style.display = 'none';
+    wrap.innerHTML = '';
+    data.items.forEach(item=>{
+      const card = document.createElement('article');
+      card.className = 'post card';
+      card.innerHTML = `
+        <div class="post-thumb" style="background-image:url('${item.image}')" role="img" aria-label="${escapeHtml(item.title)}"></div>
+        <div class="post-body">
+          <h4 class="post-title">${escapeHtml(item.title)}</h4>
+          <div class="post-meta">${escapeHtml(item.category || 'Umum')} • ${new Date(item.date).toLocaleDateString()}</div>
+          <p class="post-excerpt">${escapeHtml(truncate(stripHtml(item.content), 160))}</p>
+          <button class="btn btn-outline" data-id="${item.id}">Baca</button>
+        </div>`;
+      // klik baca -> buka modal
+      card.querySelector('button').addEventListener('click', ()=> openArticle(item));
+      wrap.appendChild(card);
+    });
+  }
+
+  // Render agenda
+  async function loadAgenda(){
+    const data = await fetchJson(AGENDA_JSON, ()=> el('agendaFallback').textContent = 'Tidak dapat memuat agenda.json');
+    const wrap = el('agendaList');
+    if(!data || !Array.isArray(data.items) || data.items.length === 0){
+      wrap.innerHTML = '<li class="muted small">Belum ada agenda terjadwal.</li>'; return;
+    }
+    el('agendaFallback').style.display = 'none';
+    wrap.innerHTML = '';
+    data.items.sort((a,b)=> new Date(a.date) - new Date(b.date)).forEach(it=>{
+      const li = document.createElement('li');
+      li.innerHTML = `<strong>${escapeHtml(it.title)}</strong> — <span class="muted small">${new Date(it.date).toLocaleString()}</span><div class="small">${escapeHtml(it.location || '')}</div>`;
+      wrap.appendChild(li);
+    });
+  }
+
+  // Render gallery
+  async function loadGallery(){
+    const data = await fetchJson(GALLERY_JSON, ()=> {});
+    const wrap = el('galleryGrid');
+    if(!data || !Array.isArray(data.items) || data.items.length === 0){
+      wrap.innerHTML = '<p class="muted small">Galeri kosong. Edit <code>/data/gallery.json</code> untuk menambah.</p>'; return;
+    }
+    wrap.innerHTML = '';
+    data.items.forEach(src=>{
+      const div = document.createElement('div'); div.className = 'gallery-item';
+      const img = document.createElement('img'); img.src = src; img.alt = 'Foto kegiatan';
+      div.appendChild(img);
+      wrap.appendChild(div);
+    });
+  }
+
+  // POST modal
+  function openArticle(item){
+    const modal = document.createElement('div'); modal.className = 'modal';
+    modal.innerHTML = `
+      <div class="modal-card card">
+        <button class="modal-close" aria-label="Tutup">&times;</button>
+        <h3>${escapeHtml(item.title)}</h3>
+        <div class="post-meta muted">${escapeHtml(item.category || 'Umum')} • ${new Date(item.date).toLocaleString()}</div>
+        ${item.image ? `<img class="modal-image" src="${item.image}" alt="">` : ''}
+        <div class="post-content">${item.content}</div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.querySelector('.modal-close').addEventListener('click', ()=> modal.remove());
+    modal.addEventListener('click', (e)=> { if(e.target === modal) modal.remove(); });
+  }
+
+  // Utilities
+  function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; }); }
+  function stripHtml(s){ return s ? s.replace(/<\/?[^>]+(>|$)/g, "") : ""; }
+  function truncate(s,n){ return s.length>n ? s.slice(0,n-1)+'…' : s; }
+
+  // Search filter for news
+  function setupSearch(){
+    const input = el('searchNews');
+    input.addEventListener('input', async ()=>{
+      const q = input.value.trim().toLowerCase();
+      const data = await fetchJson(NEWS_JSON);
+      const wrap = el('newsList');
+      if(!data) return;
+      const items = data.items.filter(it=> (it.title+ ' '+ stripHtml(it.content)).toLowerCase().includes(q) );
+      wrap.innerHTML = '';
+      items.forEach(item=>{
+        const elCard = document.createElement('div'); elCard.className='post card';
+        elCard.innerHTML = `
+          <div class="post-thumb" style="background-image:url('${item.image}')"></div>
+          <div class="post-body">
+            <h4 class="post-title">${escapeHtml(item.title)}</h4>
+            <div class="post-meta muted">${escapeHtml(item.category || 'Umum')} • ${new Date(item.date).toLocaleDateString()}</div>
+            <p class="post-excerpt">${escapeHtml(truncate(stripHtml(item.content),160))}</p>
+            <button class="btn btn-outline" data-id="${item.id}">Baca</button>
+          </div>`;
+        elCard.querySelector('button').addEventListener('click', ()=> openArticle(item));
+        wrap.appendChild(elCard);
+      });
+      if(items.length===0) wrap.innerHTML = '<p class="muted small">Tidak ditemukan.</p>';
+    });
+  }
+
+  // Contact form demo
+  document.getElementById('contactForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    alert('Pesan dikirim (demo). Untuk kirim nyata, perlu backend atau layanan form endpoint.');
+    this.reset();
+  });
+
+  // Init
+  (async function init(){
+    document.getElementById('year').textContent = new Date().getFullYear();
+    await Promise.all([loadNews(), loadAgenda(), loadGallery()]);
+    setupSearch();
+  })();
+  </script>
+</body>
+</html>
