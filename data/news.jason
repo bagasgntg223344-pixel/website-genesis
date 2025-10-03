@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "id": "n1",
+      "title": "Pelatihan Jurnalistik: Teknik Menulis Laporan",
+      "category": "Pelatihan",
+      "date": "2025-10-05T09:00:00",
+      "image": "https://via.placeholder.com/800x450?text=Pelatihan",
+      "content": "<p>Siswa GENESIS mengikuti pelatihan teknik menulis laporan jurnalistik yang diadakan di aula sekolah...</p>"
+    },
+    {
+      "id": "n2",
+      "title": "Liputan Pameran Karya Siswa",
+      "category": "Liputan",
+      "date": "2025-09-28T15:30:00",
+      "image": "https://via.placeholder.com/800x450?text=Pameran",
+      "content": "<p>Tim GENESIS melakukan peliputan acara pameran karya siswa SMAN 1 Kertosono...</p>"
+    }
+  ]
+}
